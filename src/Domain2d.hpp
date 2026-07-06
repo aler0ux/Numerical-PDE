@@ -36,7 +36,7 @@ namespace pde {
         OpType type;
         Shape shape;
     };
-    class Domain{
+    class Domain2d{
     private:
         std::vector<DomainOp> domainOperations;
     public:

@@ -1,10 +1,10 @@
-#include "Domain.hpp"
+#include "Domain2d.hpp"
 
 namespace pde {
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
    
-    bool Domain::inDomain(double x, double y) const {
+    bool Domain2d::inDomain(double x, double y) const {
         bool is_inside = false;
         for (const auto& op : domainOperations) {
             bool inOperation = std::visit(overloaded{
@@ -20,7 +20,7 @@ namespace pde {
             }
         }
     }
-    bool Domain::onBoundary(double x, double y) const {
+    bool Domain2d::onBoundary(double x, double y) const {
         bool onBoundary = false;
         for (const auto& op : domainOperations) {
             bool inOperation = std::visit(overloaded{
