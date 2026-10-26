@@ -24,7 +24,7 @@
 
 namespace cmp {
 
-enum class DomainKind { Square, LShape, Plus, Circle };
+enum class DomainKind { Square, LShape, Plus, Circle, Eight };
 
 inline std::string domainName(DomainKind k) {
     switch (k) {
@@ -32,6 +32,7 @@ inline std::string domainName(DomainKind k) {
         case DomainKind::LShape: return "lshape";
         case DomainKind::Plus: return "plus";
         case DomainKind::Circle: return "circle";
+        case DomainKind::Eight: return "eight";
     }
     return "?";
 }
@@ -43,7 +44,8 @@ inline DomainKind domainFromName(const std::string& nameIn) {
     if (name == "lshape" || name == "l" || name == "l-shape") return DomainKind::LShape;
     if (name == "plus" || name == "cross" || name == "+") return DomainKind::Plus;
     if (name == "circle" || name == "disk" || name == "c") return DomainKind::Circle;
-    throw std::invalid_argument("unknown domain '" + nameIn + "' (expected square, lshape, plus, circle)");
+    if (name == "eight" || name == "figure8" || name == "8") return DomainKind::Eight;
+    throw std::invalid_argument("unknown domain '" + nameIn + "' (expected square, lshape, plus, circle, eight)");
 }
 
 // Build the CSG domain for one of the four presets. All four live inside
@@ -56,14 +58,6 @@ inline pde::Domain2d buildDomain2d(DomainKind kind) {
             break;
         }
         case DomainKind::LShape: {
-            // Unit square, add; top-right quadrant, subtract -- a single
-            // add-then-remove, read left to right exactly like the CSG
-            // expression it represents. The removed rectangle is nudged
-            // in by a hair so the notch's own edge (x=0.5 or y=0.5)
-            // stays *in* the domain rather than being shaved off by
-            // Rectangle::contains' closed (>=, <=) interval test -- that
-            // edge is meant to be part of the boundary, not excluded
-            // from it.
             constexpr double kNudge = 1e-6;
             d.addShape(pde::Rectangle{0.0, 1.0, 0.0, 1.0});
             d.removeShape(pde::Rectangle{0.5 + kNudge, 1.0, 0.5 + kNudge, 1.0});
@@ -77,6 +71,11 @@ inline pde::Domain2d buildDomain2d(DomainKind kind) {
         }
         case DomainKind::Circle: {
             d.addShape(pde::Circle{0.5, 0.5, 0.45});
+            break;
+        }
+        case DomainKind::Eight: {
+            d.addShape(pde::Circle{0.25, 0.25, 0.275});
+            d.addShape(pde::Circle{0.70, 0.25, 0.275});
             break;
         }
     }

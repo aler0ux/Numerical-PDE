@@ -29,7 +29,8 @@ const Fl_Color kControlBg = fl_rgb_color(46, 49, 58);
 // Fixed display order for the domain dropdown; index into this array is
 // exactly Fl_Choice::value() for domainChoice_.
 constexpr cmp::DomainKind kDomainOrder[] = {cmp::DomainKind::Square, cmp::DomainKind::LShape,
-                                             cmp::DomainKind::Plus, cmp::DomainKind::Circle};
+                                             cmp::DomainKind::Plus, cmp::DomainKind::Circle,
+                                             cmp::DomainKind::Eight};
 
 enum class Method { Fdm, Fem, Both };
 
