@@ -1,0 +1,8 @@
+build/
+*.exe
+*.obj
+*.o
+src/compare/output/
+src/compare/compare2d
+.claude/
+_scratch/
