@@ -38,6 +38,7 @@ inline const std::vector<SourceFunction>& sourceFunctionLibrary() {
     static const std::vector<SourceFunction> lib = {
         {"constant", "f = 1 (uniform load)", num(1.0)},
         {"negative constant", "f = -9.8 (gravity)", num(-9.8)},
+        {"sheer", "f = floor(x+0.5) + floor(y+0.5)", floor(num(0.5) + x()) + floor(num(0.5) + y())},
         {"sine", "f = sin(pi x) sin(pi y)", sin(num(kPi) * x()) * sin(num(kPi) * y())},
         {"bump", "f = exp(-((x-0.5)^2+(y-0.5)^2)/0.02) (a Gaussian bump at the centre)",
          exp(-((x() - 0.5) * (x() - 0.5) + (y() - 0.5) * (y() - 0.5)) / 0.02)},

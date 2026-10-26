@@ -48,7 +48,7 @@ using Expr = std::variant<Number, Coord, Time,
                           std::shared_ptr<Unary>>;
 
 enum class BinOp { Add, Sub, Mul, Div, Pow };
-enum class UnFn { Neg, Sin, Cos, Exp, Log, Sqrt, Tanh, Abs };
+enum class UnFn { Neg, Sin, Cos, Exp, Log, Sqrt, Tanh, Abs, Floor };
 
 struct Binary {
     BinOp op;
@@ -84,6 +84,7 @@ inline double applyUnary(UnFn fn, double a) {
         case UnFn::Sqrt: return std::sqrt(a);
         case UnFn::Tanh: return std::tanh(a);
         case UnFn::Abs:  return std::fabs(a);
+        case UnFn::Floor: return std::floor(a);
     }
     throw std::logic_error("pde::applyUnary: unhandled UnFn");
 }
@@ -196,6 +197,7 @@ inline Expr log(Expr a) { return makeUnary(UnFn::Log, std::move(a)); }
 inline Expr sqrt(Expr a) { return makeUnary(UnFn::Sqrt, std::move(a)); }
 inline Expr tanh(Expr a) { return makeUnary(UnFn::Tanh, std::move(a)); }
 inline Expr abs(Expr a) { return makeUnary(UnFn::Abs, std::move(a)); }
+inline Expr floor(Expr a) { return makeUnary(UnFn::Floor, std::move(a)); }
 
 // ---------------------------------------------------------------------------
 // Evaluation
@@ -296,6 +298,7 @@ inline std::string toStringAt(const Expr& e, int parentPrec) {
                     case UnFn::Sqrt: name = "sqrt"; break;
                     case UnFn::Tanh: name = "tanh"; break;
                     case UnFn::Abs:  name = "abs"; break;
+                    case UnFn::Floor: name = "floor"; break;
                 }
                 return name + ("(" + toStringAt(node->arg, 0) + ")");
             }
