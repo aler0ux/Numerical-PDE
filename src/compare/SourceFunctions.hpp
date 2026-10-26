@@ -20,6 +20,13 @@
 
 namespace cmp {
 
+// Local shorthand for pi, used when building sin(pi*x)-style source terms
+// below. Kept as our own named constant (rather than <cmath>'s M_PI, which
+// isn't standard C++ and isn't guaranteed to be defined on every compiler,
+// e.g. MSVC without _USE_MATH_DEFINES) so it is portable across the
+// Windows/Linux builds this project targets.
+inline constexpr double kPi = 3.14159265358979323846;
+
 struct SourceFunction {
     std::string name;
     std::string description;
@@ -30,12 +37,13 @@ inline const std::vector<SourceFunction>& sourceFunctionLibrary() {
     using namespace pde;
     static const std::vector<SourceFunction> lib = {
         {"constant", "f = 1 (uniform load)", num(1.0)},
-        {"sine", "f = sin(pi x) sin(pi y)", sin(num(3.14159265358979323846) * x()) * sin(num(3.14159265358979323846) * y())},
+        {"negative constant", "f = -9.8 (gravity)", num(-9.8)},
+        {"sine", "f = sin(pi x) sin(pi y)", sin(num(kPi) * x()) * sin(num(kPi) * y())},
         {"bump", "f = exp(-((x-0.5)^2+(y-0.5)^2)/0.02) (a Gaussian bump at the centre)",
          exp(-((x() - 0.5) * (x() - 0.5) + (y() - 0.5) * (y() - 0.5)) / 0.02)},
         {"linear", "f = x + y", x() + y()},
         {"checker", "f = sin(2 pi x) * sin(3 pi y)",
-         sin(num(2.0 * 3.14159265358979323846) * x()) * sin(num(3.0 * 3.14159265358979323846) * y())},
+         sin(num(2.0 * kPi) * x()) * sin(num(3.0 * kPi) * y())},
     };
     return lib;
 }
