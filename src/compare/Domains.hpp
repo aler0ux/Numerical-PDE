@@ -24,7 +24,7 @@
 
 namespace cmp {
 
-enum class DomainKind { Square, LShape, Plus, Circle, Eight };
+enum class DomainKind { Square, LShape, Plus, Circle, Eight, Donut };
 
 inline std::string domainName(DomainKind k) {
     switch (k) {
@@ -33,6 +33,7 @@ inline std::string domainName(DomainKind k) {
         case DomainKind::Plus: return "plus";
         case DomainKind::Circle: return "circle";
         case DomainKind::Eight: return "eight";
+        case DomainKind::Donut: return "donut";
     }
     return "?";
 }
@@ -45,7 +46,8 @@ inline DomainKind domainFromName(const std::string& nameIn) {
     if (name == "plus" || name == "cross" || name == "+") return DomainKind::Plus;
     if (name == "circle" || name == "disk" || name == "c") return DomainKind::Circle;
     if (name == "eight" || name == "figure8" || name == "8") return DomainKind::Eight;
-    throw std::invalid_argument("unknown domain '" + nameIn + "' (expected square, lshape, plus, circle, eight)");
+    if (name == "donut" || name == "torus" || name == "d") return DomainKind::Donut;
+    throw std::invalid_argument("unknown domain '" + nameIn + "' (expected square, lshape, plus, circle, eight, donut)");
 }
 
 // Build the CSG domain for one of the four presets. All four live inside
@@ -76,6 +78,11 @@ inline pde::Domain2d buildDomain2d(DomainKind kind) {
         case DomainKind::Eight: {
             d.addShape(pde::Circle{0.25, 0.25, 0.275});
             d.addShape(pde::Circle{0.70, 0.25, 0.275});
+            break;
+        }
+        case DomainKind::Donut: {
+            d.addShape(pde::Circle{0.5, 0.5, 0.45});
+            d.removeShape(pde::Circle{0.5, 0.5, 0.25});
             break;
         }
     }

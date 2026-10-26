@@ -5,7 +5,7 @@
 //     compare2d [domain] [source] [N] [output.csv]
 //     compare2d                          interactive menu
 //
-//   domain  : square | lshape | plus | circle | eight  (default: circle)
+//   domain  : square | lshape | plus | circle | eight | donut  (default: circle)
 //   source  : constant | sine | bump | linear | checker (default: sine)
 //   N       : grid cells per axis, grid is (N+1)x(N+1) nodes (default: 64)
 //   output  : CSV path the Python plotting script reads (default: result.csv)
@@ -42,7 +42,7 @@ std::string prompt(const std::string& label, const std::string& def) {
 void printMenu() {
     std::cout << "Domains: ";
     for (auto k : {cmp::DomainKind::Square, cmp::DomainKind::LShape, cmp::DomainKind::Plus, cmp::DomainKind::Circle,
-                   cmp::DomainKind::Eight})
+                   cmp::DomainKind::Eight, cmp::DomainKind::Donut})
         std::cout << cmp::domainName(k) << "  ";
     std::cout << "\nSource functions:\n";
     for (const auto& f : cmp::sourceFunctionLibrary()) std::cout << "  " << f.name << " -- " << f.description << "\n";
