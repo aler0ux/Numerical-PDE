@@ -33,14 +33,23 @@ private:
     Fl_Choice* sourceChoice_ = nullptr;
     Fl_Choice* methodChoice_ = nullptr;
     Fl_Choice* viewChoice_ = nullptr;
-    Fl_Value_Slider* nSlider_ = nullptr;
+    // Independent resolution per method -- FDM and FEM no longer have to
+    // share one N. When they happen to match, the two grids are still
+    // structurally identical (Grid2d::build() is a pure function of
+    // (domain, n)), so the node-by-node FDM/FEM comparison in solve()
+    // still works; when they differ, that comparison is skipped instead
+    // of comparing mismatched vectors.
+    Fl_Value_Slider* nSliderFdm_ = nullptr;
+    Fl_Value_Slider* nSliderFem_ = nullptr;
     Fl_Button* solveButton_ = nullptr;
     Fl_Box* statusBox_ = nullptr;
     HeatmapView* view_ = nullptr;
 
     // Kept alive between solves so HeatmapView's Panels (which only hold
-    // pointers) stay valid until the next solve replaces them.
-    std::unique_ptr<cmp::Grid2d> grid_;
+    // pointers) stay valid until the next solve replaces them. Two
+    // separate grids now, one per method's own resolution.
+    std::unique_ptr<cmp::Grid2d> gridFdm_;
+    std::unique_ptr<cmp::Grid2d> gridFem_;
     std::vector<double> fdmSolution_;
     std::vector<double> femSolution_;
 

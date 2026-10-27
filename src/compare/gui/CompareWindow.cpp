@@ -98,12 +98,20 @@ void CompareWindow::buildSidebar(int x, int y, int w, int h) {
     methodChoice_->value(2);
     cy += 36;
 
-    label("Mesh resolution N (cells per axis)");
-    nSlider_ = new Fl_Value_Slider(x + pad, cy, cw, 24);
-    nSlider_->type(FL_HOR_NICE_SLIDER);
-    nSlider_->bounds(8, 160);
-    nSlider_->value(64);
-    nSlider_->step(1);
+    label("Mesh resolution N -- FDM (cells per axis)");
+    nSliderFdm_ = new Fl_Value_Slider(x + pad, cy, cw, 24);
+    nSliderFdm_->type(FL_HOR_NICE_SLIDER);
+    nSliderFdm_->bounds(8, 160);
+    nSliderFdm_->value(64);
+    nSliderFdm_->step(1);
+    cy += 36;
+
+    label("Mesh resolution N -- FEM (cells per axis)");
+    nSliderFem_ = new Fl_Value_Slider(x + pad, cy, cw, 24);
+    nSliderFem_->type(FL_HOR_NICE_SLIDER);
+    nSliderFem_->bounds(8, 160);
+    nSliderFem_->value(64);
+    nSliderFem_->step(1);
     cy += 36;
 
     label("View");
@@ -155,24 +163,23 @@ void CompareWindow::solve() {
     const cmp::SourceFunction& source =
         cmp::sourceFunctionLibrary()[static_cast<size_t>(std::max(0, sourceChoice_->value()))];
     const auto method = static_cast<Method>(std::max(0, methodChoice_->value()));
-    const int n = std::max(2, static_cast<int>(nSlider_->value()));
-
-    grid_ = std::make_unique<cmp::Grid2d>(domain, n);
+    const int nFdm = std::max(2, static_cast<int>(nSliderFdm_->value()));
+    const int nFem = std::max(2, static_cast<int>(nSliderFem_->value()));
 
     std::vector<Panel> panels;
     std::ostringstream status;
     status << "Domain: " << cmp::domainName(domain) << "\n";
-    status << "f = " << source.name << "\n";
-    status << "Grid: " << grid_->side() << " x " << grid_->side() << " nodes (N=" << n << ")\n";
-    status << "Active DOFs: " << grid_->numDofs() << "\n\n";
+    status << "f = " << source.name << "\n\n";
 
-    auto runMethod = [&](const char* label, const cmp::System& sys, std::vector<double>& storeInto) -> cmp::CGResult {
+    auto runMethod = [&](const char* label, const cmp::Grid2d& grid, const cmp::System& sys,
+                          std::vector<double>& storeInto) -> cmp::CGResult {
         const auto t0 = std::chrono::steady_clock::now();
         cmp::CGResult result = cmp::conjugateGradient(sys.A, sys.b);
         const auto t1 = std::chrono::steady_clock::now();
         const double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
         storeInto = result.x;
-        status << label << ":\n";
+        status << label << " (N=" << grid.n() << "):\n";
+        status << "  active DOFs = " << grid.numDofs() << "\n";
         status << "  nonzeros   = " << sys.A.nnz() << "\n";
         status << "  CG iters   = " << result.iterations << (result.converged ? " (ok)" : " (NOT converged)") << "\n";
         status << "  resid      = " << result.residualHistory.back() << "\n";
@@ -181,21 +188,35 @@ void CompareWindow::solve() {
     };
 
     if (method == Method::Fdm || method == Method::Both) {
-        const cmp::System sys = cmp::assembleFDM(*grid_, source.expr);
-        runMethod("Finite differences", sys, fdmSolution_);
-        panels.push_back(Panel{"FDM", grid_.get(), &fdmSolution_});
+        gridFdm_ = std::make_unique<cmp::Grid2d>(domain, nFdm);
+        const cmp::System sys = cmp::assembleFDM(*gridFdm_, source.expr);
+        runMethod("Finite differences", *gridFdm_, sys, fdmSolution_);
+        panels.push_back(Panel{"FDM", gridFdm_.get(), &fdmSolution_});
     }
     if (method == Method::Fem || method == Method::Both) {
-        const cmp::System sys = cmp::assembleFEM(*grid_, source.expr);
-        runMethod("Finite elements", sys, femSolution_);
-        panels.push_back(Panel{"FEM", grid_.get(), &femSolution_});
+        gridFem_ = std::make_unique<cmp::Grid2d>(domain, nFem);
+        const cmp::System sys = cmp::assembleFEM(*gridFem_, source.expr);
+        runMethod("Finite elements", *gridFem_, sys, femSolution_);
+        panels.push_back(Panel{"FEM", gridFem_.get(), &femSolution_});
     }
 
     if (method == Method::Both) {
-        double maxDiff = 0.0;
-        for (int d = 0; d < grid_->numDofs(); ++d)
-            maxDiff = std::max(maxDiff, std::fabs(fdmSolution_[static_cast<size_t>(d)] - femSolution_[static_cast<size_t>(d)]));
-        status << "Max |u_fdm - u_fem| = " << maxDiff << "\n";
+        // Only a meaningful comparison when both methods share the same N --
+        // that's what makes their DOF numbering (and hence node positions)
+        // line up index-for-index (Grid2d::build() is a pure function of
+        // (domain, n), so matching n gives matching grids). With
+        // independent sliders the two N's can now differ, in which case
+        // fdmSolution_[d] and femSolution_[d] are not even the same
+        // physical point, so comparing them directly would be meaningless
+        // rather than just imprecise -- skip it and say why instead.
+        if (nFdm == nFem) {
+            double maxDiff = 0.0;
+            for (int d = 0; d < gridFdm_->numDofs(); ++d)
+                maxDiff = std::max(maxDiff, std::fabs(fdmSolution_[static_cast<size_t>(d)] - femSolution_[static_cast<size_t>(d)]));
+            status << "Max |u_fdm - u_fem| = " << maxDiff << "\n";
+        } else {
+            status << "(FDM/FEM comparison needs matching N -- currently " << nFdm << " vs " << nFem << ")\n";
+        }
     }
 
     statusBox_->copy_label(status.str().c_str());
