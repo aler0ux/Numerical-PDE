@@ -80,8 +80,14 @@ void CompareWindow::buildSidebar(int x, int y, int w, int h) {
 
     label("Source function f(x,y)");
     sourceChoice_ = new Fl_Choice(x + pad, cy, cw, 26);
-    for (const auto& sf : cmp::sourceFunctionLibrary()) sourceChoice_->add(sf.name.c_str());
-    sourceChoice_->value(1);  // "sine"
+    int sineIndex = 0;
+    const auto& library = cmp::sourceFunctionLibrary();
+    for (size_t k = 0; k < library.size(); ++k) {
+        sourceChoice_->add(library[k].name.c_str());
+        if (library[k].name == "sine") sineIndex = static_cast<int>(k);
+    }
+    sourceChoice_->value(sineIndex);  // "sine" -- found by name, not a hardcoded
+                                       // index, so it stays correct as the library grows.
     cy += 36;
 
     label("Method");
